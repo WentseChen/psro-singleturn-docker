@@ -1,0 +1,97 @@
+{
+  "schema_version": "local-official-eval-derivation-v1",
+  "source": "modal_selfredteam_official_eval.py",
+  "source_sha256": "00b27c7ad2b9d142851d85bf88d414e63e51ed74cff4ab98b4e0410f51524075",
+  "derived_sha256": "2b49e42b4283e91db9e21cd553ec9822490bb188de97dc22e856c4941c75c191",
+  "substitutions": [
+    {
+      "from": "UPSTREAM_REMOTE = \"/selfplay-redteaming\"",
+      "to": "UPSTREAM_REMOTE = os.environ.get(\n    \"SSP_EVAL_UPSTREAM\", \"/selfplay-redteaming\"\n)"
+    },
+    {
+      "from": "    output_root = Path(\"/output/upstream_selfredteam_role_full_eval\") / output_slug",
+      "to": "    output_root = Path(\n        os.environ.get(\n            \"SSP_EVAL_OUTPUT_ROOT\",\n            \"/output/upstream_selfredteam_role_full_eval\",\n        )\n    ) / output_slug"
+    },
+    {
+      "from": "    for gpu_id in range(2):",
+      "to": "    for gpu_id in range(int(os.environ.get(\"SSP_EVAL_GPUS\", \"2\"))):"
+    },
+    {
+      "from": "    with ThreadPoolExecutor(max_workers=2) as executor:",
+      "to": "    with ThreadPoolExecutor(\n        max_workers=int(os.environ.get(\"SSP_EVAL_GPUS\", \"2\"))\n    ) as executor:"
+    },
+    {
+      "from": "    token = os.environ.get(\"HF_TOKEN\") or os.environ.get(\"HF_HUB_TOKEN\")\n    if not token:\n        raise RuntimeError(\"roll-secrets does not contain a Hugging Face token\")\n    os.environ[\"HF_TOKEN\"] = token\n    os.environ[\"HF_HUB_TOKEN\"] = token\n    os.environ[\"TOKENIZERS_PARALLELISM\"] = \"false\"\n    fork_root = Path(UPSTREAM_REMOTE) / \"eval/benchmarks/safety-eval-fork\"",
+      "to": "    token = os.environ.get(\"HF_TOKEN\") or os.environ.get(\"HF_HUB_TOKEN\")\n    if token:\n        os.environ[\"HF_TOKEN\"] = token\n        os.environ[\"HF_HUB_TOKEN\"] = token\n    elif any(\"wildguardtest\" in task for task in FULL_DEFENDER_TASKS):\n        # Only wildguardtest downloads a gated dataset (allenai/wildguardmix);\n        # the other seven tasks read files shipped inside the fork.\n        raise RuntimeError(\n            \"wildguardtest needs HF_TOKEN for the gated allenai/wildguardmix\"\n        )\n    os.environ[\"TOKENIZERS_PARALLELISM\"] = \"false\"\n    fork_root = Path(UPSTREAM_REMOTE) / \"eval/benchmarks/safety-eval-fork\""
+    },
+    {
+      "from": "FULL_DEFENDER_TASKS = CORE_TASKS + BENIGN_BOUNDARY_TASKS",
+      "to": "FULL_DEFENDER_TASKS = tuple(\n    os.environ[\"SSP_EVAL_TASKS\"].split(\",\")\n) if os.environ.get(\"SSP_EVAL_TASKS\") else CORE_TASKS + BENIGN_BOUNDARY_TASKS"
+    }
+  ],
+  "diff": [
+    "--- modal_selfredteam_official_eval.py",
+    "+++ modal_selfredteam_official_eval_local.py",
+    "@@ -1 +1,8 @@",
+    "+# GENERATED -- do not edit.",
+    "+#",
+    "+# Derived from modal_selfredteam_official_eval.py by",
+    "+# scripts/slurm/make_local_eval.py. Every difference is an environment variable",
+    "+# whose default is the original literal; see",
+    "+# modal_selfredteam_official_eval_local.provenance.json for the exact",
+    "+# substitutions. Regenerate rather than editing this file.",
+    " #!/usr/bin/env python3",
+    "@@ -25,3 +32,5 @@",
+    " UPSTREAM_LOCAL = Path(__file__).resolve().parent.parent / \"selfplay-redteaming\"",
+    "-UPSTREAM_REMOTE = \"/selfplay-redteaming\"",
+    "+UPSTREAM_REMOTE = os.environ.get(",
+    "+    \"SSP_EVAL_UPSTREAM\", \"/selfplay-redteaming\"",
+    "+)",
+    " UPSTREAM_COMMIT = \"0c56e503e8ae1b1b0fcd2214c92ea31fef1cb123\"",
+    "@@ -341,3 +350,5 @@",
+    " )",
+    "-FULL_DEFENDER_TASKS = CORE_TASKS + BENIGN_BOUNDARY_TASKS",
+    "+FULL_DEFENDER_TASKS = tuple(",
+    "+    os.environ[\"SSP_EVAL_TASKS\"].split(\",\")",
+    "+) if os.environ.get(\"SSP_EVAL_TASKS\") else CORE_TASKS + BENIGN_BOUNDARY_TASKS",
+    " ",
+    "@@ -364,6 +375,11 @@",
+    "     token = os.environ.get(\"HF_TOKEN\") or os.environ.get(\"HF_HUB_TOKEN\")",
+    "-    if not token:",
+    "-        raise RuntimeError(\"roll-secrets does not contain a Hugging Face token\")",
+    "-    os.environ[\"HF_TOKEN\"] = token",
+    "-    os.environ[\"HF_HUB_TOKEN\"] = token",
+    "+    if token:",
+    "+        os.environ[\"HF_TOKEN\"] = token",
+    "+        os.environ[\"HF_HUB_TOKEN\"] = token",
+    "+    elif any(\"wildguardtest\" in task for task in FULL_DEFENDER_TASKS):",
+    "+        # Only wildguardtest downloads a gated dataset (allenai/wildguardmix);",
+    "+        # the other seven tasks read files shipped inside the fork.",
+    "+        raise RuntimeError(",
+    "+            \"wildguardtest needs HF_TOKEN for the gated allenai/wildguardmix\"",
+    "+        )",
+    "     os.environ[\"TOKENIZERS_PARALLELISM\"] = \"false\"",
+    "@@ -375,3 +391,8 @@",
+    " ",
+    "-    output_root = Path(\"/output/upstream_selfredteam_role_full_eval\") / output_slug",
+    "+    output_root = Path(",
+    "+        os.environ.get(",
+    "+            \"SSP_EVAL_OUTPUT_ROOT\",",
+    "+            \"/output/upstream_selfredteam_role_full_eval\",",
+    "+        )",
+    "+    ) / output_slug",
+    "     output_root.mkdir(parents=True, exist_ok=True)",
+    "@@ -436,3 +457,3 @@",
+    "     gpu_ids: queue.Queue[int] = queue.Queue()",
+    "-    for gpu_id in range(2):",
+    "+    for gpu_id in range(int(os.environ.get(\"SSP_EVAL_GPUS\", \"2\"))):",
+    "         gpu_ids.put(gpu_id)",
+    "@@ -505,3 +526,5 @@",
+    "     ]",
+    "-    with ThreadPoolExecutor(max_workers=2) as executor:",
+    "+    with ThreadPoolExecutor(",
+    "+        max_workers=int(os.environ.get(\"SSP_EVAL_GPUS\", \"2\"))",
+    "+    ) as executor:",
+    "         futures = [executor.submit(run_job, *job) for job in jobs]"
+  ]
+}

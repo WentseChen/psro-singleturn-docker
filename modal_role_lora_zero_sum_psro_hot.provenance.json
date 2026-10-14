@@ -1,0 +1,48 @@
+{
+  "schema_version": "hot-psro-coordinator-derivation-v1",
+  "source": "modal_role_lora_zero_sum_psro.py",
+  "source_sha256": "0453aa30834fb1c6c6d20eb382b61d1cbab6a4b03e2891ba28e0fd3b5378f0ed",
+  "derived": "modal_role_lora_zero_sum_psro_hot.py",
+  "derived_sha256": "35356d9f2702ef1b85d0a6c8c6bf27d778fc15e7771a56f6929056ef03788720",
+  "substitutions": [
+    {
+      "from": "        \"init_mode\": \"cold\",\n        \"cold_definition\": (\n            \"every learned A_i and D_i starts from the same base with a new \"\n            f\"rank-{lora_rank} adapter and fresh optimizer\"\n        ),",
+      "to": "        \"init_mode\": \"hot\",\n        \"hot_definition\": (\n            \"every learned A_i and D_i continues the previous same-role \"\n            f\"rank-{lora_rank} adapter with a fresh optimizer; A1 and D1 open \"\n            \"a new adapter on the base model\"\n        ),"
+    },
+    {
+      "from": "            wandb_identity=f\"role_lora_cold_psro__{suffix}__{target}\",",
+      "to": "            wandb_identity=f\"role_lora_hot_psro__{suffix}__{target}\","
+    }
+  ],
+  "note": "train_cold_start_iteration_one is a legacy one-shot entrypoint that advance_cold_psro never calls; its contract literal is left untouched.",
+  "diff": [
+    "--- modal_role_lora_zero_sum_psro.py",
+    "+++ modal_role_lora_zero_sum_psro_hot.py",
+    "@@ -1 +1,8 @@",
+    "+# GENERATED -- do not edit.",
+    "+#",
+    "+# Derived from modal_role_lora_zero_sum_psro.py by",
+    "+# scripts/slurm/make_hot_psro_coordinator.py. The only differences are the",
+    "+# contract's init-mode labels and the W&B run-name prefix; see",
+    "+# modal_role_lora_zero_sum_psro_hot.provenance.json for the exact",
+    "+# substitutions. Regenerate rather than editing this file.",
+    " #!/usr/bin/env python3",
+    "@@ -1535,6 +1542,7 @@",
+    "         \"algorithm\": \"sequential_double_oracle_zero_sum_psro\",",
+    "-        \"init_mode\": \"cold\",",
+    "-        \"cold_definition\": (",
+    "-            \"every learned A_i and D_i starts from the same base with a new \"",
+    "-            f\"rank-{lora_rank} adapter and fresh optimizer\"",
+    "+        \"init_mode\": \"hot\",",
+    "+        \"hot_definition\": (",
+    "+            \"every learned A_i and D_i continues the previous same-role \"",
+    "+            f\"rank-{lora_rank} adapter with a fresh optimizer; A1 and D1 open \"",
+    "+            \"a new adapter on the base model\"",
+    "         ),",
+    "@@ -1760,3 +1768,3 @@",
+    "             training_seed=training_seed,",
+    "-            wandb_identity=f\"role_lora_cold_psro__{suffix}__{target}\",",
+    "+            wandb_identity=f\"role_lora_hot_psro__{suffix}__{target}\",",
+    "         )"
+  ]
+}
