@@ -25,11 +25,11 @@ generation 0 on the open base; each oracle is a fresh LoRA rank-64 adapter.
 
 **Please share two things back** (§6): the **wandb run** and the **LoRA adapters pushed to a HF repo**.
 
-> ⚠️ **This source-build path has not been built or run end-to-end by us** (our validation ran from the
-> pinned conda envs on our cluster; the GPUs we hand this to are not ours). It is a faithful
-> reconstruction from the exact working freeze + the proven upstream/prepare flow. **Do the two-step
-> validation in §1.5 on your GPU node before a long run** — in particular confirm the faithful-judge
-> vLLM pin (§1.5.3).
+> ⚠️ **Partially validated.** We confirmed the build-time source-generation chain on our cluster (the
+> work tree + attacker/defender SFT are really generated from public upstream + the in-repo seed — see
+> §1.5). We could **not** build the image or run on GPUs from our side (no Docker / not our GPUs), so the
+> pip env build, the 8-card run, and the faithful-judge vLLM pin are unconfirmed — **do §1.5 on your GPU
+> node before a long run**, especially the judge vLLM pin (§1.5.3).
 
 ---
 
@@ -74,9 +74,16 @@ the working tree + SFT data from the in-repo seed. No tarballs, no weights. Firs
 
 **Code is baked in (`COPY`), not mounted — after any code change, rebuild the image.**
 
-### 1.5. Validate on a GPU node (do this before a long run)
+### 1.5. Validation status + what to confirm on your node
 
-We could not build/run this from our side; confirm these three on your node:
+**Already validated by us (CPU, on our cluster):** the build-time source-generation chain runs clean —
+`prepare_sources.py` produces the patched work tree (after `data.zip` is extracted), and
+`prepare_sft_data.py` generates the attacker (1180 rows) **and** defender (14 996 + 15 000 rows) SFT sets
+from the public upstream + the in-repo seed; both patch scripts apply. So the "no data package, generated
+at build" claim is proven. (Note: `data.zip` **must** be extracted before `prepare_sources` — the
+Dockerfile does this and asserts the defender source file exists.)
+
+**Not yet validated by us** (no Docker/GPUs on our side) — confirm these three on your node:
 
 1. **Build succeeds** (watch for pip resolution / flash-attn wheel errors). The exact working freeze is
    in `requirements-srt.txt`; it is cp310 (Python 3.10) — the Dockerfile uses a py3.10 base to match.

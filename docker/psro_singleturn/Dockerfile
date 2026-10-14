@@ -66,10 +66,13 @@ RUN chmod +x /zfsauton/scratch/wentsec/coldpsro_slurm/psro_docker/*.sh \
 # ========================= 4. GENERATE the work tree + SFT data (no data shipped) =========================
 # Public upstream at the pinned commit -> patched working tree ($SSP_WORK) + SFT set ($SSP_SFT_DIR),
 # from the in-repo seed data/safety_selfplay/attacker_rewrite_1180.jsonl (1180 rows, public-derived).
+# data.zip MUST be extracted BEFORE prepare_sources (validated: otherwise defender SFT generation
+# fails later looking for helpsteer3_..._15000.jsonl). Assert the defender source exists — do not
+# swallow a missing/moved data.zip.
 RUN git clone https://github.com/mickelliu/selfplay-redteaming "$SSP_UPSTREAM_SRC" \
     && git -C "$SSP_UPSTREAM_SRC" checkout --detach 0c56e503e8ae1b1b0fcd2214c92ea31fef1cb123 \
-    && ( [ -f "$SSP_UPSTREAM_SRC/red_team/data/data.zip" ] \
-         && python -m zipfile -e "$SSP_UPSTREAM_SRC/red_team/data/data.zip" "$SSP_UPSTREAM_SRC/red_team/data" || true )
+    && $SSP_PYTHON -m zipfile -e "$SSP_UPSTREAM_SRC/red_team/data/data.zip" "$SSP_UPSTREAM_SRC/red_team/data" \
+    && test -f "$SSP_UPSTREAM_SRC/red_team/data/helpsteer3_8b_T_0.6_topp_0.9_wgclean_postfill_cot_15000.jsonl"
 RUN cd "$SSP_REPO" \
     && $SSP_PYTHON scripts/slurm/prepare_sources.py \
     && $SSP_PYTHON scripts/slurm/prepare_sft_data.py \
