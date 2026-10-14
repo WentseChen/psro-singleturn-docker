@@ -1,0 +1,3 @@
+# conda-env + weights tarballs are 18GB total — delivered out-of-band, never in git
+ctx/
+*.log
